@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>年会评选 · 管理后台</title>
+  <link rel="stylesheet" href="/static/css/common.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 480px at 10% -10%, rgba(255, 107, 53, 0.14), transparent 55%),
+        radial-gradient(800px 420px at 90% 0%, rgba(230, 57, 70, 0.1), transparent 50%),
+        var(--grad-bg);
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 60px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .topbar h1 {
+      font-size: 28px;
+      letter-spacing: 0.04em;
+    }
+    .topbar .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* Login —— 金橙光晕玻璃卡 */
+    .login-box {
+      max-width: 420px;
+      margin: 11vh auto;
+      padding: 40px 32px 34px;
+      text-align: center;
+      box-shadow: var(--shadow), 0 0 70px rgba(255, 107, 53, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .login-box .logo {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 18px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      font-size: 34px;
+      background: linear-gradient(145deg, rgba(255, 170, 100, 0.22), rgba(230, 57, 70, 0.16));
+      border: 1px solid rgba(255, 170, 100, 0.35);
+      box-shadow: 0 14px 38px rgba(255, 107, 53, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    }
+    .login-box h1 {
+      font-size: 26px;
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: 0.14em;
+    }
+    .login-box .tip {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-bottom: 22px;
+    }
+    .login-box .btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      font-size: 15px;
+      letter-spacing: 0.24em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.25fr 0.9fr;
+      gap: 18px;
+    }
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-size: 17px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      position: relative;
+      padding-left: 14px;
+      letter-spacing: 0.05em;
+    }
+    .panel h2::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 3px;
+      bottom: 3px;
+      width: 4px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, var(--orange), var(--red));
+      box-shadow: 0 0 12px rgba(255, 107, 53, 0.4);
+    }
+    .panel h2 .sub {
+      font-size: 12px;
+      color: var(--text-faint);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--text-faint);
+      line-height: 1.5;
+    }
+
+    /* Program list */
+    .prog-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .prog-item {
+      display: grid;
+      grid-template-columns: 36px 64px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      transition: border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease;
+    }
+    .prog-item:hover {
+      border-color: var(--border-strong);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+    }
+    .prog-item.dragging {
+      opacity: 0.55;
+      border-color: var(--orange);
+    }
+    .prog-item.drag-over {
+      border-color: var(--orange);
+      transform: translateY(2px);
+    }
+
+    .drag-handle {
+      cursor: grab;
+      color: var(--text-faint);
+      text-align: center;
+      font-size: 18px;
+      user-select: none;
+    }
+
+    .thumb {
+      width: 64px;
+      height: 48px;
+      border-radius: 10px;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid var(--border);
+    }
+
+    .prog-meta {
+      min-width: 0;
+    }
+    .prog-meta .n {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .prog-meta .p {
+      margin-top: 2px;
+      color: var(--text-dim);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .prog-meta .v {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--orange-soft);
+      font-weight: 700;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 3, 6, 0.65);
+      backdrop-filter: blur(8px);
+      padding: 20px;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-box {
+      width: min(520px, 100%);
+      padding: 24px;
+      animation: pop 0.22s ease;
+    }
+    .modal-box h3 {
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .cover-preview {
+      width: 100%;
+      height: 140px;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      background-size: cover;
+      background-position: center;
+      display: grid;
+      place-items: center;
+      color: var(--text-faint);
+      font-size: 13px;
+      overflow: hidden;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      color: var(--text-faint);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    tbody tr {
+      transition: background 0.18s ease;
+    }
+    tbody tr:hover {
+      background: rgba(255, 140, 80, 0.06);
+    }
+    td.n {
+      color: var(--orange-soft);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .award-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .award-tag.rank {
+      background: rgba(244, 193, 93, 0.15);
+      color: var(--gold);
+      border: 1px solid rgba(244, 193, 93, 0.3);
+    }
+    .award-tag.enc {
+      background: rgba(255, 107, 53, 0.15);
+      color: var(--orange-soft);
+      border: 1px solid rgba(255, 107, 53, 0.32);
+    }
+
+    .vote-url {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .vote-url input {
+      flex: 1;
+    }
+
+    .danger-zone {
+      border-color: rgba(255, 92, 106, 0.32);
+      background: linear-gradient(180deg, rgba(255, 92, 106, 0.05), rgba(255, 255, 255, 0.02));
+    }
+    .danger-zone h2 {
+      color: #ff9aa3;
+    }
+    .danger-zone h2::before {
+      background: linear-gradient(180deg, var(--danger), #a3121f);
+      box-shadow: 0 0 12px rgba(255, 92, 106, 0.4);
+    }
+
+    /* 顶部标题 */
+    .topbar h1 {
+      background: linear-gradient(100deg, #fff, var(--orange-soft) 55%, var(--gold-soft));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div id="login-view">
+    <div class="login-box card">
+      <div class="logo">🎪</div>
+      <h1 class="shimmer-text">管理后台</h1>
+      <p class="tip">请输入管理密码以继续</p>
+      <form id="login-form">
+        <div class="field">
+          <label for="password">管理密码</label>
+          <input id="password" class="input" type="password" autocomplete="current-password" placeholder="默认 admin123" required />
+        </div>
+        <button class="btn btn-primary" type="submit">登录</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="app-view" class="wrap hidden">
+    <div class="topbar">
+      <div>
+        <h1>年会节目评选 · 管理后台</h1>
+        <div class="hint" style="margin-top:6px">节目管理 · 投票控制 · 结果导出</div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-ghost btn-sm" href="/screen" target="_blank">打开大屏</a>
+        <a class="btn btn-ghost btn-sm" href="/vote" target="_blank">打开投票页</a>
+        <button class="btn btn-ghost btn-sm" id="btn-logout">退出登录</button>
+      </div>
+    </div>
+
+    <div class="status-line">
+      <div id="live-badge" class="badge badge-wait"><span class="dot"></span>状态</div>
+      <div class="badge badge-wait" style="background:rgba(255,255,255,0.05)">参与 <strong id="stat-voters" style="margin:0 4px;color:var(--gold-soft)">0</strong> 人</div>
+      <div class="badge badge-wait" style="background:rgba(255,255,255,0.05)">节目 <strong id="stat-count" style="margin:0 4px;color:var(--orange-soft)">0</strong> 个</div>
+    </div>
+
+    <div class="layout">
+      <div>
+        <section class="panel card">
+          <h2>
+            节目列表
+            <span class="sub">拖拽左侧手柄调整顺序</span>
+          </h2>
+          <div id="prog-list" class="prog-list"></div>
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" id="btn-add">+ 添加节目</button>
+            <button class="btn btn-ghost btn-sm" id="btn-save-order" disabled>保存排序</button>
+          </div>
+        </section>
+
+        <section class="panel card">
+          <h2>评选结果</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>排名</th>
+                  <th>节目</th>
+                  <th>表演者</th>
+                  <th>票数</th>
+                  <th>奖项</th>
+                </tr>
+              </thead>
+              <tbody id="result-body">
+                <tr><td colspan="5" class="hint">暂无结果</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" id="btn-export">导出 CSV</button>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-result">刷新结果</button>
+          </div>
+        </section>
+
+        <section class="panel card danger-zone">
+          <h2>危险操作</h2>
+          <p class="hint" style="margin-bottom:12px">
+            重置将清空所有投票记录与奖项。可选择是否一并删除节目数据，此操作不可恢复。
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-danger btn-sm" id="btn-reset-votes">仅清空投票</button>
+            <button class="btn btn-danger btn-sm" id="btn-reset-all">清空投票与节目</button>
+          </div>
+        </section>
+      </div>
+
+      <div>
+        <section class="panel card">
+          <h2>投票控制</h2>
+          <div class="form-grid">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-amber" id="btn-start">开始投票</button>
+              <button class="btn btn-primary" id="btn-end">结束投票</button>
+            </div>
+            <div class="vote-url">
+              <input class="input" id="vote-url" readonly />
+              <button class="btn btn-ghost btn-sm" id="btn-copy-url">复制</button>
+            </div>
+            <p class="hint">将投票页链接分享给观众扫码进入。结束投票后大屏会展示获奖名单并触发庆祝动画。</p>
+          </div>
+        </section>
+
+        <section class="panel card">
+          <h2>参数设置</h2>
+          <form id="settings-form" class="form-grid">
+            <div class="form-row">
+              <div class="field">
+                <label for="max-votes">每人可投票数</label>
+                <input id="max-votes" class="input" type="number" min="1" max="50" />
+              </div>
+              <div class="field">
+                <label for="rank-count">名次奖名额（前 N 名）</label>
+                <input id="rank-count" class="input" type="number" min="0" max="20" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="new-password">修改管理密码（留空不改）</label>
+              <input id="new-password" class="input" type="password" autocomplete="new-password" placeholder="至少 4 位" />
+            </div>
+            <button class="btn btn-primary" type="submit">保存设置</button>
+          </form>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Program modal -->
+  <div id="modal" class="modal">
+    <div class="modal-box card">
+      <h3 id="modal-title">添加节目</h3>
+      <form id="program-form" class="form-grid">
+        <div class="field">
+          <label for="p-name">节目名称 *</label>
+          <input id="p-name" class="input" required maxlength="80" />
+        </div>
+        <div class="field">
+          <label for="p-performer">表演者</label>
+          <input id="p-performer" class="input" maxlength="80" />
+        </div>
+        <div class="field">
+          <label>封面图</label>
+          <div id="cover-preview" class="cover-preview">未选择图片</div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <label class="btn btn-ghost btn-sm" for="p-cover-file">选择图片</label>
+            <input id="p-cover-file" class="file-input" type="file" accept="image/png,image/jpeg,image/gif,image/webp" />
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-cover">清除封面</button>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancel">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>

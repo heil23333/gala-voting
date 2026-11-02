@@ -1,0 +1,468 @@
+/* ============================================================
+   年会节目评选 — 舞台级深色奢华主题
+   红橙金主色 · 绿色仅作状态点缀 · 玻璃拟态 · 流光动效
+   ============================================================ */
+:root {
+  --bg0: #0a0510;
+  --bg1: #160a1a;
+  --bg2: #221026;
+  --card: rgba(255, 255, 255, 0.045);
+  --card-hover: rgba(255, 255, 255, 0.075);
+  --border: rgba(255, 160, 90, 0.16);
+  --border-strong: rgba(255, 160, 90, 0.32);
+  --text: #faf0ea;
+  --text-dim: #c9a9a0;
+  --text-faint: #8d6b64;
+  --red: #e63946;
+  --orange: #ff6b35;
+  --orange-soft: #ff9d68;
+  --teal: #2ec4b6;
+  --teal-soft: #5ddecf;
+  --gold: #f4c15d;
+  --gold-soft: #ffd98a;
+  --gold-deep: #b8860b;
+  --silver: #c0c7d1;
+  --bronze: #d2926b;
+  --danger: #ff5c6a;
+  --ok: #3dd68c;
+  --radius: 18px;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 40px rgba(255, 107, 53, 0.18);
+  --grad-bg: linear-gradient(165deg, #140818 0%, #2a1024 45%, #0e0712 100%);
+  --grad-accent: linear-gradient(135deg, var(--red), var(--orange));
+  --grad-btn: linear-gradient(135deg, #ff8a4c, #e63946 60%, #d92032);
+  --grad-gold: linear-gradient(120deg, #ffe9b0, #f4c15d 30%, #e8a33d 55%, #ffe9b0 80%);
+  --glass: linear-gradient(165deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  --font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--grad-bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* —— 舞台氛围背景：极光光晕 + 细网格 + 星点 —— */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(900px 520px at 12% -8%, rgba(255, 107, 53, 0.16), transparent 60%),
+    radial-gradient(1000px 560px at 88% 4%, rgba(230, 57, 70, 0.12), transparent 55%),
+    radial-gradient(1100px 700px at 50% 118%, rgba(244, 193, 93, 0.12), transparent 60%);
+  animation: aurora 18s ease-in-out infinite alternate;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 160, 90, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 160, 90, 0.035) 1px, transparent 1px),
+    radial-gradient(rgba(255, 220, 180, 0.09) 1px, transparent 1.2px);
+  background-size: 72px 72px, 72px 72px, 220px 220px;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 30%, #000 30%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 30%, #000 30%, transparent 85%);
+}
+
+@keyframes aurora {
+  0% {
+    filter: hue-rotate(0deg) brightness(1);
+    transform: scale(1);
+  }
+  100% {
+    filter: hue-rotate(12deg) brightness(1.12);
+    transform: scale(1.04);
+  }
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+/* —— 金色流光标题（shimmer）—— */
+.shimmer-text {
+  background: var(--grad-gold);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+/* —— 玻璃卡片：渐变描边 + 内高光 —— */
+.card {
+  position: relative;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 200, 140, 0.28),
+    transparent 35%,
+    transparent 65%,
+    rgba(244, 193, 93, 0.2)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* —— 按钮：光泽扫过 + 发光 —— */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
+  user-select: none;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -80%;
+  width: 55%;
+  height: 220%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  transform: skewX(-22deg);
+  transition: left 0.55s ease;
+  pointer-events: none;
+}
+
+.btn:hover::after {
+  left: 130%;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: grayscale(0.25);
+}
+
+.btn:disabled::after {
+  display: none;
+}
+
+.btn-primary {
+  background: var(--grad-btn);
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(230, 57, 70, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 16px 40px rgba(255, 107, 53, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: var(--border-strong);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+}
+
+.btn-amber {
+  background: linear-gradient(135deg, #ffbe5c, var(--orange));
+  color: #2c1204;
+  box-shadow: 0 12px 30px rgba(255, 107, 53, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff6b78, #d92032);
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(217, 32, 50, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+/* —— 表单 —— */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field label {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.32);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.input:hover,
+.select:hover,
+.textarea:hover {
+  border-color: var(--border-strong);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  background: rgba(0, 0, 0, 0.42);
+  border-color: rgba(255, 140, 80, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.16), 0 0 22px rgba(255, 107, 53, 0.12);
+}
+
+/* —— Toast —— */
+.toast-wrap {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(92vw, 420px);
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  padding: 13px 18px;
+  border-radius: 14px;
+  background: rgba(24, 12, 20, 0.92);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow), 0 0 24px rgba(255, 107, 53, 0.12);
+  backdrop-filter: blur(14px);
+  animation: toast-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  font-size: 14px;
+}
+
+.toast.ok {
+  border-color: rgba(61, 214, 140, 0.45);
+  box-shadow: var(--shadow), 0 0 24px rgba(61, 214, 140, 0.14);
+}
+
+.toast.err {
+  border-color: rgba(255, 92, 106, 0.5);
+  box-shadow: var(--shadow), 0 0 24px rgba(255, 92, 106, 0.16);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* —— 状态徽章 —— */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(8px);
+}
+
+.badge-live {
+  background: rgba(46, 196, 182, 0.15);
+  color: var(--teal-soft);
+  border: 1px solid rgba(46, 196, 182, 0.4);
+  box-shadow: 0 0 18px rgba(46, 196, 182, 0.18);
+}
+
+.badge-closed {
+  background: rgba(255, 92, 106, 0.12);
+  color: #ff8b95;
+  border: 1px solid rgba(255, 92, 106, 0.34);
+}
+
+.badge-wait {
+  background: rgba(244, 193, 93, 0.12);
+  color: var(--gold);
+  border: 1px solid rgba(244, 193, 93, 0.34);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  animation: pulse 1.6s ease infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+/* —— 发光数字 —— */
+.num-glow {
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px rgba(255, 157, 104, 0.55), 0 0 46px rgba(255, 107, 53, 0.28);
+}
+
+/* —— 金属质感徽章（金银铜）—— */
+.medal {
+  position: relative;
+  overflow: hidden;
+}
+
+.medal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 48%,
+    transparent 62%
+  );
+  background-size: 220% 100%;
+  animation: medal-shine 4.5s ease-in-out infinite;
+}
+
+@keyframes medal-shine {
+  0%,
+  55% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -160% 0;
+  }
+}
+
+/* —— 滚动条 —— */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 140, 80, 0.4), rgba(244, 193, 93, 0.3));
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

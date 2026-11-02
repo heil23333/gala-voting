@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#12080c" />
+  <title>年会节目投票</title>
+  <link rel="stylesheet" href="/static/css/common.css" />
+  <style>
+    body { padding-bottom: 110px; }
+
+    /* —— 头部：舞台灯光感 —— */
+    .hero {
+      position: relative;
+      padding: 36px 0 20px;
+      text-align: center;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 380px;
+      height: 220px;
+      background: radial-gradient(closest-side, rgba(255, 107, 53, 0.22), transparent);
+      filter: blur(18px);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-size: clamp(30px, 7vw, 42px);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+    .hero .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(244, 193, 93, 0.35);
+      background: rgba(244, 193, 93, 0.1);
+      color: var(--gold-soft);
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      margin-bottom: 14px;
+    }
+    .hero .sub {
+      margin-top: 10px;
+      color: var(--text-dim);
+      font-size: 14px;
+      line-height: 1.7;
+      letter-spacing: 0.05em;
+    }
+    .hero .divider {
+      width: 180px;
+      height: 2px;
+      margin: 18px auto 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 157, 104, 0.6), rgba(244, 193, 93, 0.55), transparent);
+      border-radius: 2px;
+    }
+
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      margin: 8px 0 20px;
+    }
+    .meta {
+      display: flex;
+      gap: 10px;
+    }
+    .meta .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 13px;
+      backdrop-filter: blur(8px);
+    }
+    .meta strong {
+      color: var(--gold-soft);
+      font-size: 15px;
+    }
+    .meta .chip.orange strong {
+      color: var(--orange-soft);
+    }
+
+    .notice {
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .notice.warn {
+      background: rgba(244, 193, 93, 0.1);
+      border-color: rgba(244, 193, 93, 0.28);
+      color: var(--gold);
+    }
+    .notice.ok {
+      background: rgba(46, 196, 182, 0.1);
+      border-color: rgba(46, 196, 182, 0.28);
+      color: var(--teal-soft);
+    }
+    .notice.closed {
+      background: rgba(255, 92, 106, 0.1);
+      border-color: rgba(255, 92, 106, 0.28);
+      color: #ff9aa3;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    /* —— 节目卡片：玻璃质感 + 光泽扫过 + 选中发光 —— */
+    .program-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.28s ease, border-color 0.28s ease;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    }
+    .program-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.08) 50%, transparent 62%);
+      background-size: 240% 100%;
+      background-position: 160% 0;
+      transition: background-position 0.7s ease;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .program-card:hover::after {
+      background-position: -120% 0;
+    }
+    .program-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 24px 55px rgba(0, 0, 0, 0.45), 0 0 38px rgba(255, 107, 53, 0.16);
+      border-color: rgba(255, 140, 80, 0.42);
+    }
+    .program-card.selected {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 1.5px var(--orange), 0 22px 52px rgba(255, 107, 53, 0.26), 0 0 42px rgba(255, 107, 53, 0.2);
+    }
+    .program-card.voted {
+      opacity: 0.8;
+    }
+    .program-card.disabled {
+      cursor: not-allowed;
+      filter: saturate(0.75);
+    }
+
+    .cover {
+      height: 158px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cover .veil {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(10, 5, 12, 0.12) 10%, rgba(12, 6, 14, 0.55) 60%, rgba(12, 6, 14, 0.92) 100%),
+        radial-gradient(120% 90% at 50% 0%, rgba(255, 180, 120, 0.14), transparent 55%);
+    }
+    .cover .ph {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px 18px;
+    }
+    .cover .ph .t {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+    }
+    .cover .ph .p {
+      margin-top: 5px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: 0.06em;
+    }
+
+    .body {
+      padding: 15px 18px 18px;
+    }
+    .body h3 {
+      font-size: 17px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+    .body .performer {
+      margin-top: 5px;
+      color: var(--text-dim);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+    .body .stats {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .votes {
+      font-variant-numeric: tabular-nums;
+    }
+    .votes .n {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--orange-soft);
+      margin-right: 5px;
+      text-shadow: 0 0 18px rgba(255, 157, 104, 0.4);
+    }
+    .votes .u {
+      font-size: 12px;
+      color: var(--text-faint);
+      letter-spacing: 0.12em;
+    }
+
+    .tag {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      backdrop-filter: blur(10px);
+      z-index: 4;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    }
+    .tag.done {
+      background: rgba(244, 193, 93, 0.24);
+      color: var(--gold-soft);
+      border: 1px solid rgba(244, 193, 93, 0.5);
+    }
+    .tag.pick {
+      background: rgba(255, 107, 53, 0.26);
+      color: var(--orange-soft);
+      border: 1px solid rgba(255, 107, 53, 0.5);
+      animation: tag-pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+    }
+    @keyframes tag-pop {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* —— 底部提交栏 —— */
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(20, 10, 22, 0.75), rgba(16, 8, 20, 0.96));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 160, 90, 0.22);
+      box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.4), 0 -1px 0 rgba(255, 200, 150, 0.08);
+      z-index: 50;
+    }
+    .bottom-inner {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .quota {
+      font-size: 13px;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+    }
+    .quota strong {
+      color: var(--orange-soft);
+      font-size: 19px;
+      text-shadow: 0 0 14px rgba(255, 157, 104, 0.4);
+    }
+    .quota strong.gold-num {
+      color: var(--gold-soft);
+      text-shadow: 0 0 14px rgba(244, 193, 93, 0.4);
+    }
+    .bottom-bar .btn {
+      min-width: 156px;
+      padding: 14px 26px;
+      font-size: 15px;
+      letter-spacing: 0.1em;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 64px 16px;
+      color: var(--text-faint);
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="eyebrow">✦ ANNUAL GALA · 2025 ✦</div>
+      <h1 class="shimmer-text">年会节目评选</h1>
+      <p class="sub">为你喜爱的节目投票 · 每人限投 <span id="quota-max">3</span> 票 · 同一节目只能投一次</p>
+      <div class="divider"></div>
+    </header>
+
+    <div class="status-bar">
+      <div id="status-badge" class="badge badge-wait"><span class="dot"></span>加载中…</div>
+      <div class="meta">
+        <div class="chip">已参与 <strong id="voters">0</strong> 人</div>
+        <div class="chip orange">已投 <strong id="used">0</strong>/<strong id="quota-max2">3</strong> 票</div>
+      </div>
+    </div>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <main id="grid" class="grid"></main>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bottom-inner">
+      <div class="quota">已选 <strong id="sel-count" class="gold-num">0</strong> 个 · 剩余 <strong id="remain">0</strong> 票</div>
+      <button id="btn-submit" class="btn btn-primary" disabled>提交投票</button>
+    </div>
+  </div>
+
+  <script src="/static/js/fingerprint.js"></script>
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/vote.js"></script>
+</body>
+</html>

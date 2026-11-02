@@ -1,0 +1,20 @@
+services:
+  gala:
+    build: .
+    image: annual-gala-voting:latest
+    container_name: gala-voting
+    ports:
+      - "3000:3000"
+    volumes:
+      # 命名卷持久化 SQLite 与封面上传（首建时自动继承镜像内 node 用户属主，
+      # 避免 Linux 主机 ./data 目录 root 属主导致容器内写库 EACCES）
+      - gala-data:/app/data
+      # 如需在宿主机直接看到文件，可改回绑定挂载（Linux 上需先 chown -R 1000:1000 ./data）：
+      # - ./data:/app/data
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  gala-data:

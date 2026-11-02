@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>年会节目大屏</title>
+  <link rel="stylesheet" href="/static/css/common.css" />
+  <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #0a0510;
+    }
+
+    /* —— 舞台背景：流动光带 + 聚光灯 —— */
+    .stage-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .stage-bg .beam {
+      position: absolute;
+      top: -30%;
+      width: 42vw;
+      height: 160%;
+      filter: blur(60px);
+      opacity: 0.5;
+      transform-origin: top center;
+    }
+    .stage-bg .beam.b1 {
+      left: -6%;
+      background: linear-gradient(180deg, rgba(255, 107, 53, 0.32), transparent 75%);
+      transform: rotate(-16deg);
+      animation: sway1 13s ease-in-out infinite alternate;
+    }
+    .stage-bg .beam.b2 {
+      right: -6%;
+      background: linear-gradient(180deg, rgba(230, 57, 70, 0.26), transparent 75%);
+      transform: rotate(14deg);
+      animation: sway2 16s ease-in-out infinite alternate;
+    }
+    .stage-bg .beam.b3 {
+      left: 32%;
+      width: 30vw;
+      background: linear-gradient(180deg, rgba(244, 193, 93, 0.2), transparent 70%);
+      transform: rotate(4deg);
+      animation: sway1 19s ease-in-out infinite alternate-reverse;
+    }
+    .stage-bg .halo {
+      position: absolute;
+      left: 50%;
+      top: -24%;
+      width: 90vw;
+      height: 70vh;
+      transform: translateX(-50%);
+      background: radial-gradient(closest-side, rgba(255, 140, 80, 0.16), transparent 70%);
+    }
+    .stage-bg .floor {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -20%;
+      height: 55%;
+      background: radial-gradient(60% 100% at 50% 100%, rgba(255, 107, 53, 0.12), transparent 70%);
+    }
+    @keyframes sway1 {
+      from { transform: rotate(-16deg) translateX(-2vw); opacity: 0.4; }
+      to { transform: rotate(-10deg) translateX(3vw); opacity: 0.62; }
+    }
+    @keyframes sway2 {
+      from { transform: rotate(14deg) translateX(2vw); opacity: 0.34; }
+      to { transform: rotate(8deg) translateX(-3vw); opacity: 0.56; }
+    }
+
+    #fx {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 2.4vh 3vw 2vh;
+      gap: 1.8vh;
+      position: relative;
+      z-index: 2;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .title-wrap {
+      position: relative;
+    }
+    .title-wrap h1 {
+      font-size: clamp(30px, 3.6vw, 56px);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+    }
+    .title-wrap .sub {
+      margin-top: 8px;
+      color: var(--text-dim);
+      font-size: clamp(13px, 1.1vw, 18px);
+      letter-spacing: 0.32em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-wrap .sub::before {
+      content: '';
+      width: 34px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--orange), var(--gold));
+      border-radius: 2px;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat {
+      min-width: 150px;
+      padding: 14px 22px;
+      border-radius: 18px;
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025));
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 12px 30px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--orange), transparent);
+      border-radius: 3px;
+    }
+    .stat.gold-line::before {
+      background: linear-gradient(180deg, var(--gold), transparent);
+    }
+    .stat .label {
+      font-size: 12px;
+      color: var(--text-faint);
+      letter-spacing: 0.22em;
+    }
+    .stat .value {
+      margin-top: 4px;
+      font-size: clamp(30px, 2.8vw, 46px);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: var(--orange-soft);
+      text-shadow: 0 0 22px rgba(255, 157, 104, 0.5), 0 0 55px rgba(255, 107, 53, 0.25);
+    }
+    .stat .value.gold {
+      color: var(--gold-soft);
+      text-shadow: 0 0 22px rgba(255, 217, 138, 0.5), 0 0 55px rgba(244, 193, 93, 0.25);
+    }
+
+    .board {
+      flex: 1;
+      min-height: 0;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(1200px 500px at 15% -10%, rgba(255, 107, 53, 0.12), transparent 55%),
+        radial-gradient(900px 420px at 90% 110%, rgba(230, 57, 70, 0.1), transparent 50%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+      overflow: auto;
+      padding: 1.4vh 1.2vw 2vh;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(6px);
+    }
+
+    .head-row,
+    .row {
+      display: grid;
+      grid-template-columns: 88px minmax(180px, 1.2fr) minmax(120px, 0.8fr) 120px minmax(200px, 2.2fr);
+      gap: 12px;
+      align-items: center;
+    }
+
+    .head-row {
+      padding: 8px 18px 14px;
+      color: var(--text-faint);
+      font-size: clamp(12px, 0.95vw, 15px);
+      letter-spacing: 0.22em;
+      position: sticky;
+      top: 0;
+      background: rgba(16, 8, 18, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 2;
+    }
+
+    .row {
+      padding: 12px 18px;
+      margin: 8px 0;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.055);
+      background: rgba(255, 255, 255, 0.028);
+      transition: background 0.25s ease, transform 0.35s ease, border-color 0.25s ease, box-shadow 0.35s ease;
+    }
+
+    .row.hot {
+      background: linear-gradient(100deg, rgba(255, 107, 53, 0.12), rgba(255, 107, 53, 0.04) 55%, rgba(244, 193, 93, 0.05));
+      border-color: rgba(255, 140, 80, 0.24);
+      box-shadow: 0 10px 34px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 220, 180, 0.1);
+    }
+
+    /* —— 金银铜名次徽章：金属光泽 + 光环 —— */
+    .rank {
+      width: 54px;
+      height: 54px;
+      border-radius: 17px;
+      display: grid;
+      place-items: center;
+      font-size: 23px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text-dim);
+      margin: 0 auto;
+      position: relative;
+    }
+    .rank.r1 {
+      background: linear-gradient(145deg, #ffe9a8, #f0b83f 45%, #c78d20);
+      color: #4a2f06;
+      box-shadow: 0 10px 30px rgba(244, 193, 93, 0.5), 0 0 44px rgba(244, 193, 93, 0.32);
+    }
+    .rank.r2 {
+      background: linear-gradient(145deg, #f4f7fb, #b9c3d2 45%, #8b97a8);
+      color: #2c3440;
+      box-shadow: 0 10px 26px rgba(192, 199, 209, 0.34), 0 0 36px rgba(192, 199, 209, 0.2);
+    }
+    .rank.r3 {
+      background: linear-gradient(145deg, #f0c4a2, #c98a5c 45%, #a06238);
+      color: #3a210f;
+      box-shadow: 0 10px 26px rgba(210, 146, 107, 0.4), 0 0 36px rgba(210, 146, 107, 0.22);
+    }
+
+    .name {
+      font-size: clamp(18px, 1.55vw, 28px);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .performer {
+      color: var(--text-dim);
+      font-size: clamp(14px, 1.1vw, 18px);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .score {
+      font-size: clamp(28px, 2.2vw, 42px);
+      font-weight: 800;
+      color: var(--orange-soft);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      text-shadow: 0 0 20px rgba(255, 157, 104, 0.45);
+    }
+    .score small {
+      font-size: 0.42em;
+      color: var(--text-faint);
+      margin-left: 5px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+    }
+
+    /* —— 人气条形图：渐变 + 流动光纹 + 发光 —— */
+    .bar-wrap {
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    .bar {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--red), var(--orange) 55%, var(--gold));
+      box-shadow: 0 0 22px rgba(255, 107, 53, 0.5), 0 0 44px rgba(255, 107, 53, 0.22);
+      transition: width 0.9s cubic-bezier(0.22, 0.75, 0.25, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .bar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        115deg,
+        transparent 0 14px,
+        rgba(255, 255, 255, 0.22) 14px 22px,
+        transparent 22px 38px
+      );
+      animation: bar-flow 2.2s linear infinite;
+    }
+    @keyframes bar-flow {
+      from { transform: translateX(-40px); }
+      to { transform: translateX(40px); }
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-faint);
+      font-size: 13px;
+      letter-spacing: 0.18em;
+    }
+    .footer .hint-pill {
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .footer .qr-pill {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 22px 10px 12px;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+    .footer .qr-pill img {
+      width: 76px;
+      height: 76px;
+      border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    }
+    #clock {
+      font-variant-numeric: tabular-nums;
+      font-size: 17px;
+      color: var(--text-dim);
+      letter-spacing: 0.22em;
+    }
+
+    /* —— 颁奖弹层：金色舞台 —— */
+    .award-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(800px 500px at 50% 110%, rgba(244, 193, 93, 0.18), transparent 65%),
+        rgba(8, 4, 10, 0.78);
+      backdrop-filter: blur(14px);
+      padding: 4vh 4vw;
+    }
+    .award-overlay.show {
+      display: flex;
+      animation: fade-in 0.5s ease;
+    }
+
+    .award-panel {
+      width: min(1100px, 96vw);
+      max-height: 88vh;
+      overflow: auto;
+      border-radius: 28px;
+      border: 1px solid rgba(244, 193, 93, 0.38);
+      background:
+        radial-gradient(700px 320px at 20% 0%, rgba(255, 107, 53, 0.18), transparent 55%),
+        radial-gradient(600px 300px at 90% 100%, rgba(244, 193, 93, 0.12), transparent 55%),
+        linear-gradient(180deg, rgba(42, 20, 30, 0.97), rgba(18, 9, 16, 0.98));
+      padding: 38px 32px;
+      box-shadow: 0 40px 110px rgba(0, 0, 0, 0.6), 0 0 80px rgba(244, 193, 93, 0.14), inset 0 1px 0 rgba(255, 230, 180, 0.18);
+    }
+
+    .award-trophy {
+      font-size: 54px;
+      text-align: center;
+      filter: drop-shadow(0 0 26px rgba(244, 193, 93, 0.55));
+      animation: trophy-float 3.2s ease-in-out infinite;
+    }
+    @keyframes trophy-float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.04); }
+    }
+
+    .award-panel h2 {
+      text-align: center;
+      font-size: clamp(30px, 3.2vw, 48px);
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      background: linear-gradient(100deg, #fff3d6, var(--gold) 30%, var(--orange-soft) 55%, var(--gold-soft) 85%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shimmer 5s linear infinite;
+    }
+    .award-panel .tip {
+      text-align: center;
+      color: var(--text-dim);
+      margin: 12px 0 26px;
+      letter-spacing: 0.18em;
+    }
+
+    .award-list {
+      display: grid;
+      gap: 12px;
+    }
+    .award-item {
+      display: grid;
+      grid-template-columns: 96px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 16px 20px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .award-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.3);
+    }
+    .award-item.rank-1 {
+      border-color: rgba(244, 193, 93, 0.5);
+      background: linear-gradient(100deg, rgba(244, 193, 93, 0.16), rgba(244, 193, 93, 0.05));
+      box-shadow: 0 0 38px rgba(244, 193, 93, 0.16);
+    }
+    .award-item.rank-2 {
+      border-color: rgba(192, 199, 209, 0.42);
+      background: rgba(192, 199, 209, 0.09);
+    }
+    .award-item.rank-3 {
+      border-color: rgba(210, 146, 107, 0.42);
+      background: rgba(210, 146, 107, 0.09);
+    }
+
+    .award-label {
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 16px rgba(244, 193, 93, 0.35);
+    }
+    .award-item .n {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .award-item .p {
+      margin-top: 3px;
+      color: var(--text-dim);
+      font-size: 13px;
+      letter-spacing: 0.05em;
+    }
+    .award-item .v {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--orange-soft);
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 18px rgba(255, 157, 104, 0.4);
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 900px) {
+      .head-row, .row {
+        grid-template-columns: 56px 1fr 100px;
+      }
+      .performer, .bar-wrap, .head-row .c3, .head-row .c5 { display: none; }
+      html, body { overflow: auto; height: auto; }
+      .screen { height: auto; min-height: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage-bg">
+    <div class="halo"></div>
+    <div class="beam b1"></div>
+    <div class="beam b2"></div>
+    <div class="beam b3"></div>
+    <div class="floor"></div>
+  </div>
+  <canvas id="fx"></canvas>
+
+  <div class="screen">
+    <div class="top">
+      <div class="title-wrap">
+        <h1 class="shimmer-text">年会节目评选大屏</h1>
+        <div class="sub">REAL-TIME RANKING · LIVE</div>
+      </div>
+      <div class="top-right">
+        <div class="stat gold-line">
+          <div class="label">参与人数</div>
+          <div class="value gold" id="voters">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">当前总票数</div>
+          <div class="value" id="total-votes">0</div>
+        </div>
+        <div id="status-badge" class="badge badge-wait" style="min-width:132px;justify-content:center;">
+          <span class="dot"></span>加载中
+        </div>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="head-row">
+        <div>名次</div>
+        <div>节目</div>
+        <div class="c3">表演者</div>
+        <div style="text-align:right">票数</div>
+        <div class="c5">人气</div>
+      </div>
+      <div id="rows"></div>
+    </div>
+
+    <div class="footer">
+      <div class="hint-pill qr-pill">
+        <img src="/api/qr" alt="投票二维码" />
+        <span>手机扫码进入投票页</span>
+      </div>
+      <div id="clock">--:--:--</div>
+    </div>
+  </div>
+
+  <div id="award-overlay" class="award-overlay">
+    <div class="award-panel">
+      <div class="award-trophy">🏆</div>
+      <h2 id="award-title">评选结果揭晓</h2>
+      <div class="tip">✦ 恭喜所有获奖节目 ✦</div>
+      <div id="award-list" class="award-list"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/fireworks.js"></script>
+  <script src="/static/js/screen.js"></script>
+</body>
+</html>
