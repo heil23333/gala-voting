@@ -6,6 +6,7 @@ const fs = require('fs');
 const multer = require('multer');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
+const sharp = require('sharp');
 
 const db = require('./db');
 const { createToken, revokeToken, requireAuth } = require('./auth');
@@ -315,16 +316,52 @@ router.delete('/admin/programs/:id', requireAuth, (req, res) => {
 
 // ---------- Upload / voting control / results / reset / export ----------
 
+// 上传后立即压缩：最长边压到 1200px（显示框最大约 400 CSS px，3 倍屏也够清），
+// 按原格式重新编码（gif 保留动图）；实际格式与扩展名不符时改回正确扩展名
+const MAX_IMAGE_EDGE = 1200;
+const EXT_BY_FORMAT = { jpeg: '.jpg', png: '.png', webp: '.webp', gif: '.gif' };
+
+async function optimizeUploadedImage(filePath) {
+  const originalExt = path.extname(filePath).toLowerCase();
+  const img = sharp(filePath, { animated: true });
+  const meta = await img.metadata();
+  const targetExt = EXT_BY_FORMAT[meta.format];
+  if (!targetExt) throw new Error('无法识别的图片格式');
+
+  let pipeline = img.rotate().resize({
+    width: MAX_IMAGE_EDGE,
+    height: MAX_IMAGE_EDGE,
+    fit: 'inside',
+    withoutEnlargement: true,
+  });
+  if (meta.format === 'jpeg') pipeline = pipeline.jpeg({ quality: 82, mozjpeg: true });
+  else if (meta.format === 'png') pipeline = pipeline.png({ compressionLevel: 9 });
+  else if (meta.format === 'webp') pipeline = pipeline.webp({ quality: 82 });
+  else pipeline = pipeline.gif();
+
+  const finalPath = targetExt === originalExt ? filePath : filePath.slice(0, -originalExt.length) + targetExt;
+  const tmpPath = filePath + '.opt';
+  await pipeline.toFile(tmpPath);
+  fs.renameSync(tmpPath, finalPath);
+  if (finalPath !== filePath) fs.unlinkSync(filePath);
+  return `/uploads/${path.basename(finalPath)}`;
+}
+
 router.post('/admin/upload', requireAuth, (req, res) => {
-  upload.single('image')(req, res, (err) => {
+  upload.single('image')(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ error: err.message || '上传失败' });
     }
     if (!req.file) {
       return res.status(400).json({ error: '未收到图片文件' });
     }
-    const url = `/uploads/${req.file.filename}`;
-    res.json({ url });
+    try {
+      const url = await optimizeUploadedImage(req.file.path);
+      res.json({ url });
+    } catch (e) {
+      try { fs.unlinkSync(req.file.path); } catch (_) { /* 已不存在则忽略 */ }
+      return res.status(400).json({ error: `图片处理失败：${e.message || '未知错误'}` });
+    }
   });
 });
 

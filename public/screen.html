@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>年会节目大屏</title>
+  <title>年会节目评选</title>
   <link rel="stylesheet" href="/static/css/common.css" />
   <style>
     html, body {
@@ -108,22 +108,6 @@
       font-weight: 900;
       letter-spacing: 0.12em;
     }
-    .title-wrap .sub {
-      margin-top: 8px;
-      color: var(--text-dim);
-      font-size: clamp(13px, 1.1vw, 18px);
-      letter-spacing: 0.32em;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .title-wrap .sub::before {
-      content: '';
-      width: 34px;
-      height: 2px;
-      background: linear-gradient(90deg, var(--orange), var(--gold));
-      border-radius: 2px;
-    }
 
     .top-right {
       display: flex;
@@ -191,9 +175,21 @@
     .head-row,
     .row {
       display: grid;
-      grid-template-columns: 88px minmax(180px, 1.2fr) minmax(120px, 0.8fr) 120px minmax(200px, 2.2fr);
+      grid-template-columns: 84px 96px minmax(240px, 2fr) minmax(170px, 1.45fr) 120px minmax(150px, 1.15fr);
       gap: 12px;
       align-items: center;
+    }
+
+    /* 节目封面缩略图（无封面时由 coverStyle 填充暖色渐变占位） */
+    .thumb {
+      width: 96px;
+      height: 56px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba(255, 255, 255, 0.04);
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
     }
 
     .head-row {
@@ -214,13 +210,26 @@
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.055);
       background: rgba(255, 255, 255, 0.028);
-      transition: background 0.25s ease, transform 0.35s ease, border-color 0.25s ease, box-shadow 0.35s ease;
+      transition:
+        background 0.35s cubic-bezier(0.25, 0.9, 0.3, 1),
+        transform 0.35s ease,
+        border-color 0.35s cubic-bezier(0.25, 0.9, 0.3, 1),
+        box-shadow 0.35s cubic-bezier(0.25, 0.9, 0.3, 1);
     }
 
     .row.hot {
       background: linear-gradient(100deg, rgba(255, 107, 53, 0.12), rgba(255, 107, 53, 0.04) 55%, rgba(244, 193, 93, 0.05));
       border-color: rgba(255, 140, 80, 0.24);
       box-shadow: 0 10px 34px rgba(255, 107, 53, 0.1), inset 0 1px 0 rgba(255, 220, 180, 0.1);
+    }
+
+    /* 新节目插入：淡入上浮 */
+    .row.enter {
+      animation: row-enter 0.5s cubic-bezier(0.22, 0.9, 0.3, 1);
+    }
+    @keyframes row-enter {
+      from { opacity: 0; transform: translateY(20px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     /* —— 金银铜名次徽章：金属光泽 + 光环 —— */
@@ -252,6 +261,15 @@
       color: #3a210f;
       box-shadow: 0 10px 26px rgba(210, 146, 107, 0.4), 0 0 36px rgba(210, 146, 107, 0.22);
     }
+    /* 名次变化：徽章弹跳 */
+    .rank.pop {
+      animation: rank-pop 0.5s cubic-bezier(0.3, 0.9, 0.35, 1);
+    }
+    @keyframes rank-pop {
+      0% { transform: scale(0.5) rotate(-10deg); opacity: 0.35; }
+      55% { transform: scale(1.18) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
 
     .name {
       font-size: clamp(18px, 1.55vw, 28px);
@@ -269,6 +287,20 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .name > span,
+    .performer > span {
+      display: inline-block;
+      white-space: nowrap;
+    }
+    /* 节目名/表演者超出列宽时自动左右滚动展示，不超出则静止 */
+    .name.marquee > span,
+    .performer.marquee > span {
+      animation: row-marquee 5.5s ease-in-out 0.8s infinite alternate;
+    }
+    @keyframes row-marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(var(--shift, -30%)); }
+    }
     .score {
       font-size: clamp(28px, 2.2vw, 42px);
       font-weight: 800;
@@ -283,6 +315,16 @@
       margin-left: 5px;
       font-weight: 600;
       letter-spacing: 0.16em;
+    }
+    /* 票数变化：数字脉冲 */
+    .score .num.bump {
+      display: inline-block;
+      animation: num-bump 0.5s cubic-bezier(0.3, 0.9, 0.35, 1);
+    }
+    @keyframes num-bump {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.2) translateY(-3px); }
+      100% { transform: scale(1) translateY(0); }
     }
 
     /* —— 人气条形图：渐变 + 流动光纹 + 发光 —— */
@@ -487,7 +529,7 @@
       .head-row, .row {
         grid-template-columns: 56px 1fr 100px;
       }
-      .performer, .bar-wrap, .head-row .c3, .head-row .c5 { display: none; }
+      .performer, .bar-wrap, .thumb, .head-row .c3, .head-row .c5, .head-row .cthumb { display: none; }
       html, body { overflow: auto; height: auto; }
       .screen { height: auto; min-height: 100%; }
     }
@@ -506,8 +548,7 @@
   <div class="screen">
     <div class="top">
       <div class="title-wrap">
-        <h1 class="shimmer-text">年会节目评选大屏</h1>
-        <div class="sub">REAL-TIME RANKING · LIVE</div>
+        <h1 class="shimmer-text">年会节目评选</h1>
       </div>
       <div class="top-right">
         <div class="stat gold-line">
@@ -527,6 +568,7 @@
     <div class="board">
       <div class="head-row">
         <div>名次</div>
+        <div class="cthumb"></div>
         <div>节目</div>
         <div class="c3">表演者</div>
         <div style="text-align:right">票数</div>

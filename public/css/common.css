@@ -47,10 +47,21 @@ body {
   min-height: 100%;
 }
 
+/* 底色双保险：iOS Safari 对 body 上 background-attachment:fixed 的渐变偶尔不着色会露出白底，
+   故 html 层也挂同样渐变兜底；background-color 保底纯深色，渐变失效也绝不出白底。
+   color-scheme: dark 让浏览器原生控件/弹层默认深色。 */
+html {
+  background: var(--grad-bg);
+  background-color: #0e0712;
+  background-attachment: fixed;
+  color-scheme: dark;
+}
+
 body {
   font-family: var(--font);
   color: var(--text);
   background: var(--grad-bg);
+  background-color: #0e0712;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;

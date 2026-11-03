@@ -137,17 +137,20 @@
       return `background-image:url('${Gala.esc(program.cover_url)}');background-size:cover;background-position:center;`;
     }
     const name = program.name || '节目';
-    // 稳定渐变 + 纹理光效（无图时的高级感占位）
+    // 稳定渐变 + 纹理光效（无图时的高级感占位）。
+    // 色相收敛到红橙玫瑰暖色域，贴合主题，避免按名字哈希随机出大片蓝绿
     let h = 0;
     for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
-    const h2 = (h + 42) % 360;
-    const h3 = (h + 320) % 360;
+    const warm = [6, 16, 26, 36, 350, 340];
+    const base = warm[h % warm.length];
+    const h2 = (base + 24) % 360;
+    const h3 = (base + 336) % 360;
     return (
       `background-image:` +
       `radial-gradient(120% 130% at 18% 12%, hsla(${h3} 75% 62% / 0.32), transparent 52%),` +
       `radial-gradient(90% 120% at 85% 88%, hsla(${h2} 70% 55% / 0.28), transparent 55%),` +
       `repeating-linear-gradient(118deg, transparent 0 26px, rgba(255,255,255,0.045) 26px 30px),` +
-      `linear-gradient(145deg, hsl(${h} 52% 30%), hsl(${h2} 58% 18%));`
+      `linear-gradient(145deg, hsl(${base} 52% 30%), hsl(${h2} 58% 18%));`
     );
   };
 

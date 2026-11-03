@@ -278,7 +278,8 @@ function updateProgramById(id, { name, performer, cover_url }) {
   updateProgram.run(
     name ?? existing.name,
     performer ?? existing.performer,
-    cover_url === undefined ? existing.cover_url : cover_url
+    cover_url === undefined ? existing.cover_url : cover_url,
+    id
   );
   return getProgram.get(id);
 }

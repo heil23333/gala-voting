@@ -100,18 +100,12 @@
             ? '<span class="tag pick">已选</span>'
             : '';
 
-        const coverText = `
-          <div class="ph">
-            <div class="t">${Gala.esc(p.name)}</div>
-            <div class="p">${Gala.esc(p.performer || '——')}</div>
-          </div>`;
-
+        // 无封面时不再在封面上重复节目名/表演者（卡片正文已有，避免出现两遍）
         return `
           <article class="${classes.join(' ')}" data-id="${p.id}">
             ${tag}
             <div class="cover" style="${Gala.coverStyle(p)}">
               <div class="veil"></div>
-              ${coverText}
             </div>
             <div class="body">
               <h3>${Gala.esc(p.name)}</h3>
